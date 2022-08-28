@@ -313,7 +313,7 @@ def rolling_split(df, window_size, tgt_len, test_size=0.1, train=True):
                                 shuffle=True)
     else:
         return (np.array(df_x, dtype="float32"),
-                np.array(df_y, dtype="float32")[:, np.newaxis])
+                np.array(df_y, dtype="float32")[:,:, np.newaxis])
 
 # ----------------------------------------------------------------
 # Validation
