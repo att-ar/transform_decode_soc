@@ -51,7 +51,7 @@ def positional_encoding(positions: int, d: int):
     return tf.cast(pos_encoding, dtype=tf.float32)
 
 
-def create_look_ahead_mask(sequence_length):
+def create_look_ahead_mask(dim1, dim2):
     """
     Returns an upper triangular matrix filled with ones.
     Lets the training model check if it got predictions right by having access to the actual output
@@ -64,13 +64,12 @@ def create_look_ahead_mask(sequence_length):
         mask -- (size, size) tensor
 
     >>>create_look_ahead_mask(5)
-    <tf.Tensor: shape=(5, 5), dtype=float32, numpy=
-    array([[1., 0., 0., 0., 0.],
-           [1., 1., 0., 0., 0.],
-           [1., 1., 1., 0., 0.],
-           [1., 1., 1., 1., 0.],
-           [1., 1., 1., 1., 1.]], dtype=float32)>
+    <tf.Tensor: shape=(1, 5, 5), dtype=float32, numpy=
+    array([[[-0.e+00, -1.e+11, -1.e+11, -1.e+11, -1.e+11],
+            [-0.e+00, -0.e+00, -1.e+11, -1.e+11, -1.e+11],
+            [-0.e+00, -0.e+00, -0.e+00, -1.e+11, -1.e+11],
+            [-0.e+00, -0.e+00, -0.e+00, -0.e+00, -1.e+11],
+            [-0.e+00, -0.e+00, -0.e+00, -0.e+00, -0.e+00]]], dtype=float32)>
     """
-    mask = tf.linalg.band_part(
-        tf.ones((1, sequence_length, sequence_length)), -1, 0)
-    return mask.squeeze()
+    mask = (1 - tf.linalg.band_part( tf.ones((dim1,dim2)), -1, 0) ) * -1e11
+    return mask

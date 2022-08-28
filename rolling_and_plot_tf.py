@@ -272,35 +272,7 @@ mean:\n{data.mean(axis=0)}''')
 # -------------------------------------------------------
 
 
-def rolling_split_trial(df, window_size):
-    '''
-    implements rolling window sectioning
-    There are four input features: delta_t, V, I at time t, and SOC at time t-1
-    Prediction at time t uses the features given
-    '''
-    if "delta t" in df.columns:
-        col = ["delta t", "current", "voltage"]
-    else:
-        col = ["current", "voltage"]
-    df_x = (df[col].iloc[1:].reset_index(drop=True)  # staggered right by one
-            .join(
-        df["soc"].iloc[:-1].reset_index(drop=True),  # staggered left by one
-        how="outer"
-    ))
-    df_x = [window.values
-            for window
-            in df_x.rolling(window=window_size,
-                            min_periods=window_size - 2,
-                            method="table"
-                            )][window_size:]
-
-    # staggered right by one
-    df_y = df["soc"].iloc[window_size + 1:].values[:, np.newaxis]
-
-    return np.array(df_x, dtype="float32"), np.array(df_y, dtype="float32")
-
-
-def rolling_split(df, window_size, test_size=0.1, train=True):
+def rolling_split(df, window_size, tgt_len, test_size=0.1, train=True):
     '''
     Precondition: "delta t" is not in the columns
     implements rolling window sectioning
@@ -326,15 +298,17 @@ def rolling_split(df, window_size, test_size=0.1, train=True):
             # staggered left by one
             in df[["current", "voltage", "soc"]].iloc[:-1]
             .rolling(window=window_size,
-                     min_periods=window_size - 2,
                      method="table"
                      )][window_size:]
 
-    df_y = df["soc"].iloc[window_size + 1:].values
+    df_y = [window.values
+            for window
+            in df["soc"].iloc[window_size - tgt_len + 1:]
+            .rolling(window=tgt_len)][tgt_len:]
 
     if train:
         return train_test_split(np.array(df_x, dtype="float32"),
-                                np.array(df_y, dtype="float32")[:, np.newaxis],
+                                np.array(df_y, dtype="float32")[:,:, np.newaxis],
                                 test_size=test_size,
                                 shuffle=True)
     else:
