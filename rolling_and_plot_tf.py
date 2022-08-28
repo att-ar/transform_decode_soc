@@ -333,10 +333,10 @@ def validate(model, dataloader, dev=True):
         use False if it's the entire dataset
     '''
     
-    aggregate = model.predict(dataloader, verbose = 1)
+    aggregate = model.predict(dataloader, verbose = 1)[:,-1,:] #only want the final time step
     print("Max pred: ", aggregate.max(), "\tMin pred: ", aggregate.min())
 
-    np_labels = np.concatenate([label.numpy() for _, label in dataloader][
+    np_labels = np.concatenate([label[:,-1,:].numpy() for _, label in dataloader][
         :len(aggregate)], axis = 0)
 
     visualize = pd.DataFrame(data={"pred": aggregate.squeeze(),
@@ -359,7 +359,8 @@ def validate(model, dataloader, dev=True):
                     title="Predicted vs Actual SOC",
                     name=[["predictions", "labels"]],
                     mode=[["lines", "lines"]],
-                    color=[["red", "yellow"]]
+                    color=[["red", "green"]],
+                    size = [[6,6.5]]
                     )
     fig.show()
     return visualize
